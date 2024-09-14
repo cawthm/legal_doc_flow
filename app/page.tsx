@@ -1,101 +1,93 @@
-import Image from "next/image";
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { FileText, Settings } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <Image 
+              src="/logo.png" 
+              alt="Capitol Partners Logo" 
+              width={40} 
+              height={40} 
+              className="mr-2"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <span className="text-xl font-semibold">Capitol Partners</span>
+          </div>
+          <nav className="flex space-x-4">
+            <Link href="#" className="text-gray-600 hover:text-gray-900">Home</Link>
+            <Link href="#" className="text-gray-600 hover:text-gray-900">Investments</Link>
+            <Link href="#" className="text-gray-600 hover:text-gray-900">Fundraising</Link>
+            <Link href="#" className="text-gray-600 hover:text-gray-900">Reports</Link>
+            <Link href="#" className="text-gray-600 hover:text-gray-900">Profile</Link>
+          </nav>
+          <div className="flex items-center space-x-4">
+            <Settings className="w-6 h-6 text-gray-600" />
+            <div className="w-8 h-8 bg-gray-300 rounded-full overflow-hidden">
+              <Image src="/placeholder.svg" alt="User avatar" width={32} height={32} className="w-full h-full object-cover" />
+            </div>
+          </div>
+        </div>
+      </header>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Step 1/3</h2>
+          <Progress value={33} className="mb-6" />
+          <h1 className="text-3xl font-bold mb-4">Complete your investment documents</h1>
+          <p className="text-gray-600 mb-6">The app will prompt you for information in order to complete the following documents, necessary for your investment in our fund.</p>
+          <Button variant="outline" className="w-full mb-6">Download all documents in blank (ZIP)</Button>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">1. Complete the Subscription Agreement (SA)</h3>
+              <p className="text-gray-600 mb-4">Begin here. The SA is ensures we have all the necessary information for your investment.</p>
+              <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg">
+                <div className="flex items-center">
+                  <FileText className="w-6 h-6 mr-2 text-gray-600" />
+                  <div>
+                    <h4 className="font-semibold">Subscription Agreement</h4>
+                    <p className="text-sm text-gray-600">Document type: PDF</p>
+                  </div>
+                </div>
+                <Button>Begin</Button>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2">2. Initial the Private Placement Memorandum (PPM)</h3>
+              <p className="text-gray-600 mb-4">The PPM outlines the fund, important risks, terms, fees, and entry/ exit mechanics. It is a disclosure only.</p>
+              <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg">
+                <div className="flex items-center">
+                  <FileText className="w-6 h-6 mr-2 text-gray-600" />
+                  <div>
+                    <h4 className="font-semibold">Private Placement Memorandum</h4>
+                    <p className="text-sm text-gray-600">Document type: PDF</p>
+                  </div>
+                </div>
+                <Button>Begin</Button>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2">3. Initial the Limited Partnership Agreement (LPA)</h3>
+              <p className="text-gray-600 mb-4">This document admits the LP into the partnership.</p>
+              <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg">
+                <div className="flex items-center">
+                  <FileText className="w-6 h-6 mr-2 text-gray-600" />
+                  <div>
+                    <h4 className="font-semibold">Offering Circular</h4>
+                    <p className="text-sm text-gray-600">Document type: PDF</p>
+                  </div>
+                </div>
+                <Button>Begin</Button>
+              </div>
+            </div>
+          </div>
+          <Button className="w-full mt-8">Continue</Button>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
-  );
+  )
 }
