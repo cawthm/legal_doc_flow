@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress"
 import { FileText, Settings } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { SubscriptionFlowModal } from "@/components/subscription/subscription-flow-modal"
 
 export default function Home() {
   return (
@@ -43,8 +44,8 @@ export default function Home() {
           <Button variant="outline" className="w-full mb-6">Download all documents in blank (ZIP)</Button>
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold mb-2">1. Complete the Subscription Agreement (SA)</h3>
-              <p className="text-gray-600 mb-4">Begin here. The SA is ensures we have all the necessary information for your investment.</p>
+              <h3 className="text-xl font-semibold mb-2">1. Sign the Subscription Agreement</h3>
+              <p className="text-gray-600 mb-4">We need you to sign the subscription agreement first. It's a legal requirement and ensures we have all the necessary information for your investment.</p>
               <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg">
                 <div className="flex items-center">
                   <FileText className="w-6 h-6 mr-2 text-gray-600" />
@@ -53,7 +54,7 @@ export default function Home() {
                     <p className="text-sm text-gray-600">Document type: PDF</p>
                   </div>
                 </div>
-                <Button>Begin</Button>
+                <SubscriptionFlowModal />
               </div>
             </div>
             <div>
