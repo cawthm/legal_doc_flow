@@ -1,11 +1,19 @@
+'use client'
+
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { FileText, Settings } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { SubscriptionFlowModal } from "@/components/subscription/subscription-flow-modal"
+import DownloadPDF from '@/components/DownloadPDF'
 
 export default function Home() {
+  const [answers, setAnswers] = useState<string[]>([]);
+
+  // Remove the useEffect that was setting dummy data
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
@@ -54,7 +62,7 @@ export default function Home() {
                     <p className="text-sm text-gray-600">Document type: PDF</p>
                   </div>
                 </div>
-                <SubscriptionFlowModal />
+                <SubscriptionFlowModal setAnswers={setAnswers} />
               </div>
             </div>
             <div>
@@ -86,6 +94,7 @@ export default function Home() {
               </div>
             </div>
           </div>
+          <DownloadPDF answers={answers} />
           <Button className="w-full mt-8">Continue</Button>
         </div>
       </main>

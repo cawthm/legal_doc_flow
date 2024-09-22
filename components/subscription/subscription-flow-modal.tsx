@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Dispatch, SetStateAction } from 'react'
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-export function SubscriptionFlowModal() {
+export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<SetStateAction<string[]>> }) {
   // =========================================
   // State Declarations
   // =========================================
@@ -48,6 +48,12 @@ export function SubscriptionFlowModal() {
     executive: false,
     investmentProfessional: false,
   })
+  const [qualifiedClientRepresentations, setQualifiedClientRepresentations] = useState({
+    rep1: { initialed: false, initials: '' },
+    rep2: { initialed: false, initials: '' },
+    rep3: { initialed: false, initials: '' },
+  })
+  const [userInitials, setUserInitials] = useState('')
 
   // =========================================
   // Effect Hooks
@@ -88,8 +94,44 @@ export function SubscriptionFlowModal() {
 
   const handleAccreditedSubmit = () => {
     console.log('Accredited investor form submitted:', accreditedStatus)
+    setCurrentStep('initials')
+  }
+
+  const handleInitialsSubmit = () => {
+    if (userInitials) {
+      setCurrentStep('qualifiedClient')
+    }
+  }
+
+  const handleQualifiedClientSubmit = () => {
+    console.log('Qualified client form submitted:', qualifiedClientRepresentations)
     setOpen(false)
-    // Here you would typically send all the collected data to your backend
+    
+    // Update the answers in the parent component
+    setAnswers([
+      signatories[0].name,
+      bankFormData.accountHolderName,
+      bankFormData.accountNumber,
+      consent ? "Yes, I consent to receive documents electronically" : "No consent given",
+      Object.entries(accreditedStatus)
+        .filter(([_, value]) => value)
+        .map(([key, _]) => key)
+        .join(", "),
+      Object.entries(qualifiedClientRepresentations)
+        .filter(([_, value]) => value.initialed)
+        .map(([key, value]) => `${key}: ${value.initials}`)
+        .join(", ")
+    ])
+  }
+
+  const handleQualifiedClientChange = (key: keyof typeof qualifiedClientRepresentations, action: 'initial' | 'remove') => {
+    setQualifiedClientRepresentations(prev => ({
+      ...prev,
+      [key]: {
+        initialed: action === 'initial',
+        initials: action === 'initial' ? userInitials : '',
+      }
+    }))
   }
 
   const handleAccreditedStatusChange = (key: keyof typeof accreditedStatus) => {
@@ -116,6 +158,25 @@ export function SubscriptionFlowModal() {
   const handleBankFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setBankFormData(prevData => ({ ...prevData, [name]: value }))
+  }
+
+  const handleBack = () => {
+    switch (currentStep) {
+      case 'bank':
+        setCurrentStep('consent');
+        break;
+      case 'accredited':
+        setCurrentStep('bank');
+        break;
+      case 'initials':
+        setCurrentStep('accredited');
+        break;
+      case 'qualifiedClient':
+        setCurrentStep('initials');
+        break;
+      default:
+        break;
+    }
   }
 
   // =========================================
@@ -171,7 +232,8 @@ export function SubscriptionFlowModal() {
           </Button>
         </div>
       </div>
-      <DialogFooter>
+      <DialogFooter className="flex justify-between">
+        <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
         <Button onClick={handleConsentSubmit}>Next</Button>
       </DialogFooter>
     </>
@@ -179,52 +241,130 @@ export function SubscriptionFlowModal() {
 
   // Render the bank account form
   const renderBankForm = () => (
-    <form onSubmit={handleBankSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="bankName">Bank Name</Label>
-        <Input
-          id="bankName"
-          name="bankName"
-          value={bankFormData.bankName}
-          onChange={handleBankFormChange}
-          required
-        />
+    <ScrollArea className="h-[400px] pr-4">
+      <form onSubmit={handleBankSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="bankName">Bank Name</Label>
+          <Input
+            id="bankName"
+            name="bankName"
+            value={bankFormData.bankName}
+            onChange={handleBankFormChange}
+            required
+          />
+        </div>
+       
+        <div>
+          <Label htmlFor="accountHolderName">Account Holder Name (If different from above LP signatory)</Label>
+          <Input
+            id="accountHolderName"
+            name="accountHolderName"
+            value={bankFormData.accountHolderName}
+            onChange={handleBankFormChange}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="accountNumber">Account Number</Label>
+          <Input
+            id="accountNumber"
+            name="accountNumber"
+            value={bankFormData.accountNumber}
+            onChange={handleBankFormChange}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="routingNumber">Routing Number</Label>
+          <Input
+            id="routingNumber"
+            name="routingNumber"
+            value={bankFormData.routingNumber}
+            onChange={handleBankFormChange}
+            required
+          />
+        </div>
+        <DialogFooter className="flex justify-between">
+          <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
+          <Button type="submit">Next</Button>
+        </DialogFooter>
+      </form>
+    </ScrollArea>
+  )
+
+  const renderInitialsForm = () => (
+    <div className="space-y-4">
+      <p>Some portions of the document will ask for your initials to complete. Please provide your initials below.</p>
+      <div className="flex items-center space-x-4">
+        <div>
+          <Label htmlFor="userInitials">Your Initials</Label>
+          <Input
+            id="userInitials"
+            value={userInitials}
+            onChange={(e) => setUserInitials(e.target.value)}
+            placeholder="Type your initials"
+            className="w-24"
+          />
+        </div>
+        {userInitials && (
+          <div className="font-signature text-4xl text-blue-600">
+            {userInitials}
+          </div>
+        )}
       </div>
-     
-      <div>
-        <Label htmlFor="accountHolderName">Account Holder Name (If different from above LP signatory)</Label>
-        <Input
-          id="accountHolderName"
-          name="accountHolderName"
-          value={bankFormData.accountHolderName}
-          onChange={handleBankFormChange}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="accountNumber">Account Number</Label>
-        <Input
-          id="accountNumber"
-          name="accountNumber"
-          value={bankFormData.accountNumber}
-          onChange={handleBankFormChange}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="routingNumber">Routing Number</Label>
-        <Input
-          id="routingNumber"
-          name="routingNumber"
-          value={bankFormData.routingNumber}
-          onChange={handleBankFormChange}
-          required
-        />
-      </div>
-      <DialogFooter>
-        <Button type="submit">Submit</Button>
+      <DialogFooter className="flex justify-between">
+        <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
+        <Button onClick={handleInitialsSubmit} disabled={!userInitials}>Next</Button>
       </DialogFooter>
-    </form>
+    </div>
+  )
+
+  const renderQualifiedClientForm = () => (
+    <ScrollArea className="h-[400px] pr-4">
+      <form onSubmit={(e) => { e.preventDefault(); handleQualifiedClientSubmit(); }} className="space-y-4">
+        <div className="space-y-4">
+          <div className="space-y-4">
+            <div>
+              <Label>
+                I represent that I have a net worth of more than $2,100,000 (excluding primary residence).
+              </Label>
+              <InitialInput
+                id="rep1"
+                isInitialed={qualifiedClientRepresentations.rep1.initialed}
+                onInitial={() => handleQualifiedClientChange('rep1', 'initial')}
+                onRemove={() => handleQualifiedClientChange('rep1', 'remove')}
+              />
+            </div>
+            <div>
+              <Label>
+                I represent that I have at least $1,000,000 under management with the investment adviser.
+              </Label>
+              <InitialInput
+                id="rep2"
+                isInitialed={qualifiedClientRepresentations.rep2.initialed}
+                onInitial={() => handleQualifiedClientChange('rep2', 'initial')}
+                onRemove={() => handleQualifiedClientChange('rep2', 'remove')}
+              />
+            </div>
+            <div>
+              <Label>
+                I represent that I am a qualified purchaser as defined in section 2(a)(51)(A) of the Investment Company Act of 1940.
+              </Label>
+              <InitialInput
+                id="rep3"
+                isInitialed={qualifiedClientRepresentations.rep3.initialed}
+                onInitial={() => handleQualifiedClientChange('rep3', 'initial')}
+                onRemove={() => handleQualifiedClientChange('rep3', 'remove')}
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter className="flex justify-between">
+          <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
+          <Button type="submit">Submit</Button>
+        </DialogFooter>
+      </form>
+    </ScrollArea>
   )
 
   const renderAccreditedForm = () => (
@@ -292,11 +432,36 @@ export function SubscriptionFlowModal() {
             </Label>
           </div>
         </div>
-        <DialogFooter>
-          <Button type="submit">Submit</Button>
+        <DialogFooter className="flex justify-between">
+          <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
+          <Button type="submit">Next</Button>
         </DialogFooter>
       </form>
     </ScrollArea>
+  )
+
+  const InitialInput = ({ 
+    id, 
+    isInitialed, 
+    onInitial, 
+    onRemove 
+  }: { 
+    id: string, 
+    isInitialed: boolean, 
+    onInitial: () => void, 
+    onRemove: () => void 
+  }) => (
+    <div className="flex items-center space-x-2">
+      <Button
+        onClick={isInitialed ? onRemove : onInitial}
+        variant={isInitialed ? "destructive" : "default"}
+      >
+        {isInitialed ? "Remove" : "Initial"}
+      </Button>
+      {isInitialed && (
+        <span className="font-signature text-2xl">{userInitials}</span>
+      )}
+    </div>
   )
 
   // =========================================
@@ -317,17 +482,23 @@ export function SubscriptionFlowModal() {
           <DialogTitle>
             {currentStep === 'consent' ? 'Consent and Authorized Signatories' : 
              currentStep === 'bank' ? 'Bank Account Information' : 
-             'Accredited Investor Status'}
+             currentStep === 'accredited' ? 'Accredited Investor Status' :
+             currentStep === 'initials' ? 'Provide Your Initials' :
+             'Qualified Client Status'}
           </DialogTitle>
           <DialogDescription>
             {currentStep === 'consent' ? 'Please provide your consent and list the authorized signatories for the fund.' : 
              currentStep === 'bank' ? 'Please provide your bank account information.' :
-             'Please indicate which of the following accredited investor criteria apply to you.'}
+             currentStep === 'accredited' ? 'Please indicate which of the following accredited investor criteria apply to you.' :
+             currentStep === 'initials' ? 'Please provide your initials for document completion.' :
+             'Please initial the following representations if they apply to you.'}
           </DialogDescription>
         </DialogHeader>
         {currentStep === 'consent' ? renderConsentForm() : 
          currentStep === 'bank' ? renderBankForm() : 
-         renderAccreditedForm()}
+         currentStep === 'accredited' ? renderAccreditedForm() :
+         currentStep === 'initials' ? renderInitialsForm() :
+         renderQualifiedClientForm()}
         {showWarning && (
           <div className="text-red-500 mt-2">
             Please complete all required fields and provide consent.
