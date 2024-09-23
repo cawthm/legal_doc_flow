@@ -21,12 +21,12 @@ export default function Home() {
           <div className="flex items-center">
             <Image 
               src="/logo.png" 
-              alt="Capitol Partners Logo" 
+              alt="Capital Partners Logo" 
               width={40} 
               height={40} 
               className="mr-2"
             />
-            <span className="text-xl font-semibold">Capitol Partners</span>
+            <span className="text-xl font-semibold">Indra Capital Partners</span>
           </div>
           <nav className="flex space-x-4">
             <Link href="#" className="text-gray-600 hover:text-gray-900">Home</Link>

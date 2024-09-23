@@ -23,6 +23,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Kalam } from 'next/font/google'
+
+const kalam = Kalam({ 
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<SetStateAction<string[]>> }) {
   // =========================================
@@ -54,6 +61,11 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
     rep3: { initialed: false, initials: '' },
   })
   const [userInitials, setUserInitials] = useState('')
+  const [benefitPlanStatus, setBenefitPlanStatus] = useState<'notBenefitPlan' | 'benefitPlan' | null>(null)
+  const [benefitPlanDetails, setBenefitPlanDetails] = useState({
+    type: null as null | 'subject' | 'investing',
+    planAssetPercentage: null as null | '10%' | '20%' | '30%' | '40%' | '50%' | '60%' | '70%' | '80%' | '90%' | '100%'
+  })
 
   // =========================================
   // Effect Hooks
@@ -105,23 +117,7 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
 
   const handleQualifiedClientSubmit = () => {
     console.log('Qualified client form submitted:', qualifiedClientRepresentations)
-    setOpen(false)
-    
-    // Update the answers in the parent component
-    setAnswers([
-      signatories[0].name,
-      bankFormData.accountHolderName,
-      bankFormData.accountNumber,
-      consent ? "Yes, I consent to receive documents electronically" : "No consent given",
-      Object.entries(accreditedStatus)
-        .filter(([_, value]) => value)
-        .map(([key, _]) => key)
-        .join(", "),
-      Object.entries(qualifiedClientRepresentations)
-        .filter(([_, value]) => value.initialed)
-        .map(([key, value]) => `${key}: ${value.initials}`)
-        .join(", ")
-    ])
+    setCurrentStep('benefitPlan')
   }
 
   const handleQualifiedClientChange = (key: keyof typeof qualifiedClientRepresentations, action: 'initial' | 'remove') => {
@@ -174,9 +170,26 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
       case 'qualifiedClient':
         setCurrentStep('initials');
         break;
+      case 'benefitPlan':
+        setCurrentStep('qualifiedClient');
+        break;
       default:
         break;
     }
+  }
+
+  const handleBenefitPlanSubmit = () => {
+    console.log('Benefit Plan Investor form submitted:', { benefitPlanStatus, benefitPlanDetails })
+    setOpen(false)
+    
+    setAnswers(prevAnswers => [
+      ...prevAnswers,
+      `Benefit Plan Investor Status: ${benefitPlanStatus === 'notBenefitPlan' ? 'Not a Benefit Plan Investor' : 'Benefit Plan Investor'}`,
+      ...(benefitPlanStatus === 'benefitPlan' ? [
+        `Type: ${benefitPlanDetails.type === 'subject' ? 'Subject to ERISA' : 'Investing plan assets'}`,
+        ...(benefitPlanDetails.type === 'investing' ? [`Plan asset percentage: ${benefitPlanDetails.planAssetPercentage}`] : [])
+      ] : [])
+    ])
   }
 
   // =========================================
@@ -228,7 +241,7 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
             </TableBody>
           </Table>
           <Button onClick={addSignatory} variant="outline">
-            Add Signatory
+            Add Additional Signatories (optional)
           </Button>
         </div>
       </div>
@@ -307,7 +320,7 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
           />
         </div>
         {userInitials && (
-          <div className="font-signature text-4xl text-blue-600">
+          <div className={`${kalam.className} text-4xl text-blue-600 font-bold`}>
             {userInitials}
           </div>
         )}
@@ -361,7 +374,7 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
         </div>
         <DialogFooter className="flex justify-between">
           <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
-          <Button type="submit">Submit</Button>
+          <Button type="submit">Next</Button>
         </DialogFooter>
       </form>
     </ScrollArea>
@@ -459,8 +472,84 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
         {isInitialed ? "Remove" : "Initial"}
       </Button>
       {isInitialed && (
-        <span className="font-signature text-2xl">{userInitials}</span>
+        <span className={`${kalam.className} text-2xl font-bold text-blue-600`}>{userInitials}</span>
       )}
+    </div>
+  )
+
+  const renderBenefitPlanForm = () => (
+    <div className="space-y-4">
+      <p>The New Limited Partner represents that it is (please check all applicable boxes):</p>
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="notBenefitPlan" 
+            checked={benefitPlanStatus === 'notBenefitPlan'}
+            onCheckedChange={() => {
+              setBenefitPlanStatus('notBenefitPlan')
+              setBenefitPlanDetails({ type: null, planAssetPercentage: null })
+            }}
+          />
+          <Label htmlFor="notBenefitPlan">not a Benefit Plan Investor; or</Label>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="benefitPlan" 
+              checked={benefitPlanStatus === 'benefitPlan'}
+              onCheckedChange={() => setBenefitPlanStatus('benefitPlan')}
+            />
+            <Label htmlFor="benefitPlan">a Benefit Plan Investor that is:</Label>
+          </div>
+          {benefitPlanStatus === 'benefitPlan' && (
+            <div className="ml-6 space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="subject" 
+                  checked={benefitPlanDetails.type === 'subject'}
+                  onCheckedChange={(checked) => 
+                    setBenefitPlanDetails(prev => ({ type: checked ? 'subject' : null, planAssetPercentage: null }))
+                  }
+                />
+                <Label htmlFor="subject">subject to Part 4 of Title I of ERISA</Label>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="investing" 
+                    checked={benefitPlanDetails.type === 'investing'}
+                    onCheckedChange={(checked) => 
+                      setBenefitPlanDetails(prev => ({ type: checked ? 'investing' : null, planAssetPercentage: null }))
+                    }
+                  />
+                  <Label htmlFor="investing">an entity whose underlying assets include "plan assets" that are not subject to Title I of ERISA. The New Limited Partner also represents that the percentage of such "plan assets" compared to the value of its total assets is not more than:</Label>
+                </div>
+                {benefitPlanDetails.type === 'investing' && (
+                  <div className="ml-6 grid grid-cols-2 gap-2">
+                    {['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'].map((percentage) => (
+                      <div key={percentage} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`percentage-${percentage}`}
+                          checked={benefitPlanDetails.planAssetPercentage === percentage}
+                          onCheckedChange={() => 
+                            setBenefitPlanDetails(prev => ({ ...prev, planAssetPercentage: percentage as any }))
+                          }
+                        />
+                        <Label htmlFor={`percentage-${percentage}`}>{percentage}{percentage === '10%' || percentage === '20%' ? ' *' : ''}</Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <p className="text-sm italic">* applicable to entities with multiple classes, one of which exceeds the 25% threshold for Benefit Plan Investors</p>
+      <DialogFooter className="flex justify-between">
+        <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
+        <Button onClick={handleBenefitPlanSubmit} disabled={!benefitPlanStatus || (benefitPlanStatus === 'benefitPlan' && (!benefitPlanDetails.type || (benefitPlanDetails.type === 'investing' && !benefitPlanDetails.planAssetPercentage)))}>Next</Button>
+      </DialogFooter>
     </div>
   )
 
@@ -484,21 +573,24 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
              currentStep === 'bank' ? 'Bank Account Information' : 
              currentStep === 'accredited' ? 'Accredited Investor Status' :
              currentStep === 'initials' ? 'Provide Your Initials' :
-             'Qualified Client Status'}
+             currentStep === 'qualifiedClient' ? 'Qualified Client Status' :
+             'Benefit Plan Investor Status'}
           </DialogTitle>
           <DialogDescription>
             {currentStep === 'consent' ? 'Please provide your consent and list the authorized signatories for the fund.' : 
              currentStep === 'bank' ? 'Please provide your bank account information.' :
              currentStep === 'accredited' ? 'Please indicate which of the following accredited investor criteria apply to you.' :
              currentStep === 'initials' ? 'Please provide your initials for document completion.' :
-             'Please initial the following representations if they apply to you.'}
+             currentStep === 'qualifiedClient' ? 'Please initial the following representations if they apply to you.' :
+             'Please indicate your Benefit Plan Investor status.'}
           </DialogDescription>
         </DialogHeader>
         {currentStep === 'consent' ? renderConsentForm() : 
          currentStep === 'bank' ? renderBankForm() : 
          currentStep === 'accredited' ? renderAccreditedForm() :
          currentStep === 'initials' ? renderInitialsForm() :
-         renderQualifiedClientForm()}
+         currentStep === 'qualifiedClient' ? renderQualifiedClientForm() :
+         renderBenefitPlanForm()}
         {showWarning && (
           <div className="text-red-500 mt-2">
             Please complete all required fields and provide consent.
