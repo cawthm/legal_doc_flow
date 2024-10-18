@@ -1,18 +1,18 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { FileText, Settings } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { SubscriptionFlowModal } from "@/components/subscription/subscription-flow-modal"
+import { AMLFlowModal } from "@/components/subscription/aml-flow-modal"
 import DownloadPDF from '@/components/DownloadPDF'
 
 export default function Home() {
   const [answers, setAnswers] = useState<string[]>([]);
-
-  // Remove the useEffect that was setting dummy data
+  const [amlAnswers, setAMLAnswers] = useState<string[]>([]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -45,10 +45,10 @@ export default function Home() {
       </header>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Step 1/3</h2>
-          <Progress value={33} className="mb-6" />
+          <h2 className="text-xl font-semibold mb-4">Step 1/2</h2>
+          <Progress value={50} className="mb-6" />
           <h1 className="text-3xl font-bold mb-4">Complete your investment documents</h1>
-          <p className="text-gray-600 mb-6">The app will prompt you for information in order to complete the following documents, necessary for your investment in our fund.</p>
+          <p className="text-gray-600 mb-6">The app will prompt you for information to complete the following documents, necessary for your investment in our fund.</p>
           <Button variant="outline" className="w-full mb-6">Download all documents in blank (ZIP)</Button>
           <div className="space-y-6">
             <div>
@@ -66,31 +66,17 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-2">2. Initial the Private Placement Memorandum (PPM)</h3>
-              <p className="text-gray-600 mb-4">The PPM outlines the fund, important risks, terms, fees, and entry/ exit mechanics. It is a disclosure only.</p>
+              <h3 className="text-xl font-semibold mb-2">2. Complete the Anti Money Laundering Supplement</h3>
+              <p className="text-gray-600 mb-4">This supplement is required to comply with anti-money laundering regulations and to ensure the integrity of our fund.</p>
               <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg">
                 <div className="flex items-center">
                   <FileText className="w-6 h-6 mr-2 text-gray-600" />
                   <div>
-                    <h4 className="font-semibold">Private Placement Memorandum</h4>
+                    <h4 className="font-semibold">Anti Money Laundering Supplement</h4>
                     <p className="text-sm text-gray-600">Document type: PDF</p>
                   </div>
                 </div>
-                <Button>Begin</Button>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-2">3. Initial the Limited Partnership Agreement (LPA)</h3>
-              <p className="text-gray-600 mb-4">This document admits the LP into the partnership.</p>
-              <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg">
-                <div className="flex items-center">
-                  <FileText className="w-6 h-6 mr-2 text-gray-600" />
-                  <div>
-                    <h4 className="font-semibold">Offering Circular</h4>
-                    <p className="text-sm text-gray-600">Document type: PDF</p>
-                  </div>
-                </div>
-                <Button>Begin</Button>
+                <AMLFlowModal setAnswers={setAMLAnswers} />
               </div>
             </div>
           </div>

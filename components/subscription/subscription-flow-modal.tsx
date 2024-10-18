@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Kalam } from 'next/font/google'
+import { Progress } from "@/components/ui/progress"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 const kalam = Kalam({ 
   weight: ['400', '700'],
@@ -36,7 +38,7 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
   // State Declarations
   // =========================================
   const [open, setOpen] = useState(false)
-  const [currentStep, setCurrentStep] = useState('consent')
+  const [currentStep, setCurrentStep] = useState('basicInfo')
   const [consent, setConsent] = useState(false)
   const [signatories, setSignatories] = useState([{ name: '', title: '' }])
   const [showWarning, setShowWarning] = useState(false)
@@ -52,19 +54,40 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
     netWorth: false,
     seriesExams: false,
     businessOwner: false,
-    executive: false,
-    investmentProfessional: false,
+    iraRevocabletrust: false,
+    selfdirectedPlan: false,
+    trustFamilyOffice: false,
+    pensionEntity: false,
+    accredEntity: false,
   })
   const [qualifiedClientRepresentations, setQualifiedClientRepresentations] = useState({
     rep1: { initialed: false, initials: '' },
     rep2: { initialed: false, initials: '' },
     rep3: { initialed: false, initials: '' },
+    rep4: { initialed: false, initials: '' },
+    rep5: { initialed: false, initials: '' },
   })
   const [userInitials, setUserInitials] = useState('')
   const [benefitPlanStatus, setBenefitPlanStatus] = useState<'notBenefitPlan' | 'benefitPlan' | null>(null)
   const [benefitPlanDetails, setBenefitPlanDetails] = useState({
     type: null as null | 'subject' | 'investing',
     planAssetPercentage: null as null | '10%' | '20%' | '30%' | '40%' | '50%' | '60%' | '70%' | '80%' | '90%' | '100%'
+  })
+  const [entityType, setEntityType] = useState<'individual' | 'entity' | null>(null)
+  const [basicInfo, setBasicInfo] = useState({
+    fullLegalName: '',
+    ssn: '',
+    dateOfBirth: '',
+    birthPlace: '',
+    citizenship: '',
+    address: '',
+    phoneNumber: '',
+    email: '',
+    stateOfFormation: '',
+    dateOfFormation: '',
+    isControlledPerson: false,
+    authorizedSignatoryTitle: '',
+    taxId: '',
   })
 
   // =========================================
@@ -101,6 +124,12 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
   const handleBankSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     console.log('Bank account form submitted:', bankFormData)
+    setCurrentStep('accredited')
+  }
+
+  // Add a new function to handle skipping
+  const handleSkipBankInfo = () => {
+    console.log('Bank account information skipped')
     setCurrentStep('accredited')
   }
 
@@ -192,6 +221,22 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
     ])
   }
 
+  // New function to handle basic info submission
+  const handleBasicInfoSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('Basic info submitted:', basicInfo)
+    setCurrentStep('consent')
+  }
+
+  // New function to handle basic info changes
+  const handleBasicInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target
+    setBasicInfo(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+  }
+
   // =========================================
   // Render Functions
   // =========================================
@@ -263,10 +308,9 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
             name="bankName"
             value={bankFormData.bankName}
             onChange={handleBankFormChange}
-            required
           />
         </div>
-       
+        
         <div>
           <Label htmlFor="accountHolderName">Account Holder Name (If different from above LP signatory)</Label>
           <Input
@@ -274,7 +318,6 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
             name="accountHolderName"
             value={bankFormData.accountHolderName}
             onChange={handleBankFormChange}
-            required
           />
         </div>
         <div>
@@ -284,7 +327,6 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
             name="accountNumber"
             value={bankFormData.accountNumber}
             onChange={handleBankFormChange}
-            required
           />
         </div>
         <div>
@@ -294,12 +336,14 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
             name="routingNumber"
             value={bankFormData.routingNumber}
             onChange={handleBankFormChange}
-            required
           />
         </div>
         <DialogFooter className="flex justify-between">
           <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
-          <Button type="submit">Next</Button>
+          <div className="space-x-2">
+            <Button type="button" variant="secondary" onClick={handleSkipBankInfo}>Skip for now</Button>
+            <Button type="submit">Next</Button>
+          </div>
         </DialogFooter>
       </form>
     </ScrollArea>
@@ -307,7 +351,7 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
 
   const renderInitialsForm = () => (
     <div className="space-y-4">
-      <p>Some portions of the document will ask for your initials to complete. Please provide your initials below.</p>
+      <p>Type your initials below.</p>
       <div className="flex items-center space-x-4">
         <div>
           <Label htmlFor="userInitials">Your Initials</Label>
@@ -315,8 +359,8 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
             id="userInitials"
             value={userInitials}
             onChange={(e) => setUserInitials(e.target.value)}
-            placeholder="Type your initials"
-            className="w-24"
+            placeholder="Initials"
+            className="w-24 text-center"
           />
         </div>
         {userInitials && (
@@ -336,41 +380,25 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
     <ScrollArea className="h-[400px] pr-4">
       <form onSubmit={(e) => { e.preventDefault(); handleQualifiedClientSubmit(); }} className="space-y-4">
         <div className="space-y-4">
-          <div className="space-y-4">
-            <div>
+          {[
+            { id: 'rep1', label: 'a natural person who (or a company that) immediately after entering into the contract has at least $1,100,000 under the management of the investment adviser' },
+            { id: 'rep2', label: 'any natural person or company (other than a company that is required to be registered under the Investment Company Act but is not registered) that has a net worth (together, in the case of a natural person, with assets held jointly with a spouse) of more than $2,200,000' },
+            { id: 'rep3', label: 'a natural person who is an executive officer, director, trustee, general partner, or person serving in a similar capacity, of the General Partner, or an employee of the General Partner (other than an employee performing solely clerical, secretarial or administrative functions with regard to the General Partner) who, in connection with his or her regular functions or duties, participates in the investment activities of such General Partner, provided that such employee has been performing such functions and duties for or on behalf of the General Partner, or substantially similar functions or duties for or on behalf of another company for at least 12 months' },
+            { id: 'rep4', label: 'any natural person or company (other than a company that is required to be registered under the Investment Company Act but is not registered) that is a "qualified purchaser" as defined under the 1940 Act' },
+            { id: 'rep5', label: 'a private investment company, such that the company would be defined as an investment company under section 3(a) of the Investment Company Act, but for the exception provided from that definition by section 3(c)(1) of the Investment Company Act, an investment company registered under the Investment Company Act or a business development company as defined in the Investment Company Act, and each equity owner of such entity satisfies one of the above conditions.' },
+          ].map(({ id, label }) => (
+            <div key={id} className="space-y-2">
               <Label>
-                I represent that I have a net worth of more than $2,100,000 (excluding primary residence).
+                {label}
               </Label>
               <InitialInput
-                id="rep1"
-                isInitialed={qualifiedClientRepresentations.rep1.initialed}
-                onInitial={() => handleQualifiedClientChange('rep1', 'initial')}
-                onRemove={() => handleQualifiedClientChange('rep1', 'remove')}
+                id={id}
+                isInitialed={qualifiedClientRepresentations[id as keyof typeof qualifiedClientRepresentations].initialed}
+                onInitial={() => handleQualifiedClientChange(id as keyof typeof qualifiedClientRepresentations, 'initial')}
+                onRemove={() => handleQualifiedClientChange(id as keyof typeof qualifiedClientRepresentations, 'remove')}
               />
             </div>
-            <div>
-              <Label>
-                I represent that I have at least $1,000,000 under management with the investment adviser.
-              </Label>
-              <InitialInput
-                id="rep2"
-                isInitialed={qualifiedClientRepresentations.rep2.initialed}
-                onInitial={() => handleQualifiedClientChange('rep2', 'initial')}
-                onRemove={() => handleQualifiedClientChange('rep2', 'remove')}
-              />
-            </div>
-            <div>
-              <Label>
-                I represent that I am a qualified purchaser as defined in section 2(a)(51)(A) of the Investment Company Act of 1940.
-              </Label>
-              <InitialInput
-                id="rep3"
-                isInitialed={qualifiedClientRepresentations.rep3.initialed}
-                onInitial={() => handleQualifiedClientChange('rep3', 'initial')}
-                onRemove={() => handleQualifiedClientChange('rep3', 'remove')}
-              />
-            </div>
-          </div>
+          ))}
         </div>
         <DialogFooter className="flex justify-between">
           <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
@@ -384,66 +412,28 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
     <ScrollArea className="h-[400px] pr-4">
       <form onSubmit={(e) => { e.preventDefault(); handleAccreditedSubmit(); }} className="space-y-4">
         <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="income"
-              checked={accreditedStatus.income}
-              onCheckedChange={() => handleAccreditedStatusChange('income')}
-            />
-            <Label htmlFor="income">
-              Individual income exceeding $200,000 in each of the two most recent years or joint income with a spouse or spouse equivalent exceeding $300,000 for those years and a reasonable expectation of the same income level in the current year.
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="netWorth"
-              checked={accreditedStatus.netWorth}
-              onCheckedChange={() => handleAccreditedStatusChange('netWorth')}
-            />
-            <Label htmlFor="netWorth">
-              Net worth over $1 million, either alone or together with a spouse or spouse equivalent (excluding the value of the person's primary residence).
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="seriesExams"
-              checked={accreditedStatus.seriesExams}
-              onCheckedChange={() => handleAccreditedStatusChange('seriesExams')}
-            />
-            <Label htmlFor="seriesExams">
-              Hold in good standing one or more professional certifications or designations or credentials from an accredited educational institution that the SEC has designated as qualifying an individual for accredited investor status.
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="businessOwner"
-              checked={accreditedStatus.businessOwner}
-              onCheckedChange={() => handleAccreditedStatusChange('businessOwner')}
-            />
-            <Label htmlFor="businessOwner">
-              Any entity in which all of the equity owners are accredited investors.
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="executive"
-              checked={accreditedStatus.executive}
-              onCheckedChange={() => handleAccreditedStatusChange('executive')}
-            />
-            <Label htmlFor="executive">
-              Executive officer, director, trustee, general partner, advisory board member, or person serving in a similar capacity, of the offering company or general partner of the offering company.
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="investmentProfessional"
-              checked={accreditedStatus.investmentProfessional}
-              onCheckedChange={() => handleAccreditedStatusChange('investmentProfessional')}
-            />
-            <Label htmlFor="investmentProfessional">
-              Investment professional: Person who demonstrates the professional knowledge of unregistered securities by passing certain FINRA administered exams.
-            </Label>
-          </div>
+          {[
+            { id: 'income', label: '(i) an individual who had an income in excess of $200,000 in each of the two most recent years (or joint income with his or her spouse or spousal equivalent , in excess of $300,000 in each of those years) and has a reasonable expectation of reaching the same income level in the coming year' },
+            { id: 'netWorth', label: '(ii) an individual who has a net worth (or joint net worth with his or her spouse) in excess of $1,000,000, not including the value of their primary residence but reduced by the amount of any outstanding secured debt (i.e., mortgage) on such primary residence that exceeds the fair market value of such residence' },
+            { id: 'seriesExams', label: '(iii) an individual holding, in good standing, one or more professional certifications or designations, which at this time the SEC has limited to FINRA Series 7, Series 82, or Series 65 licenses' },
+            { id: 'businessOwner', label: '(iv) an individual that is a "knowledgeable employee" of the Fund' },
+            { id: 'iraRevocabletrust', label: '(v) an Individual Retirement Account ("IRA") or revocable trust and the individual who established the IRA or each grantor of the trust is an accredited investor on the basis of (i) through (iv) above' },
+            { id: 'selfdirectedPlan', label: '(vi) a self-directed pension plan and the participant who directed that assets of his or her account be invested in the Fund is an accredited investor on the basis of (i) through (iv) above and such participant is the only participant whose account is being invested in the Fund' },
+            { id: 'trustFamilyOffice', label: '(vii) any trust or family office (a) with total assets in excess of $5,000,000, (b) which was not formed for the specific purpose of investing in the Fund and (c) whose purchase is directed by a person who has such knowledge and experience in financial and business matters that he or she is capable or evaluating the merits and risks of the prospective investment' },
+            { id: 'pensionEntity', label: '(viii) a pension plan which is not a self-directed plan, a corporation, a partnership or Massachusetts or similar business trust, that was not formed for the specific purpose of acquiring interest in the Fund, with total assets in excess of $5,000,000 or that owns investments in excess of $5,000,000' },
+            { id: 'accredEntity', label: '(ix) an entity in which all of the equity owners are accredited investors' },
+          ].map(({ id, label }) => (
+            <div key={id} className="flex items-center space-x-2">
+              <Checkbox
+                id={id}
+                checked={accreditedStatus[id as keyof typeof accreditedStatus]}
+                onCheckedChange={() => handleAccreditedStatusChange(id as keyof typeof accreditedStatus)}
+              />
+              <Label htmlFor={id}>
+                {label}
+              </Label>
+            </div>
+          ))}
         </div>
         <DialogFooter className="flex justify-between">
           <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
@@ -553,6 +543,177 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
     </div>
   )
 
+  // New function to render the basic info form
+  const renderBasicInfoForm = () => (
+    <ScrollArea className="h-[400px] pr-4">
+      <form onSubmit={handleBasicInfoSubmit} className="space-y-4">
+        <RadioGroup value={entityType || ''} onValueChange={(value) => setEntityType(value as 'individual' | 'entity')}>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="individual" id="individual" />
+            <Label htmlFor="individual">Individual (including individual IRA)</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="entity" id="entity" />
+            <Label htmlFor="entity">Entity / Trust</Label>
+          </div>
+        </RadioGroup>
+
+        {entityType && (
+          <>
+            <div>
+              <Label htmlFor="fullLegalName">Full Legal Name of New LP</Label>
+              <Input
+                id="fullLegalName"
+                name="fullLegalName"
+                value={basicInfo.fullLegalName}
+                onChange={handleBasicInfoChange}
+                required
+              />
+            </div>
+
+            {entityType === 'individual' ? (
+              <>
+                <div>
+                  <Label htmlFor="ssn">Social Security Number</Label>
+                  <Input
+                    id="ssn"
+                    name="ssn"
+                    value={basicInfo.ssn}
+                    onChange={handleBasicInfoChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    value={basicInfo.dateOfBirth}
+                    onChange={handleBasicInfoChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="birthPlace">State or Province and Country of Birth</Label>
+                  <Input
+                    id="birthPlace"
+                    name="birthPlace"
+                    value={basicInfo.birthPlace}
+                    onChange={handleBasicInfoChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="citizenship">Country of Citizenship</Label>
+                  <Input
+                    id="citizenship"
+                    name="citizenship"
+                    value={basicInfo.citizenship}
+                    onChange={handleBasicInfoChange}
+                    required
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label htmlFor="stateOfFormation">State or Country of Formation</Label>
+                  <Input
+                    id="stateOfFormation"
+                    name="stateOfFormation"
+                    value={basicInfo.stateOfFormation}
+                    onChange={handleBasicInfoChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dateOfFormation">Date of Formation</Label>
+                  <Input
+                    id="dateOfFormation"
+                    name="dateOfFormation"
+                    type="date"
+                    value={basicInfo.dateOfFormation}
+                    onChange={handleBasicInfoChange}
+                    required
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isControlledPerson"
+                    name="isControlledPerson"
+                    checked={basicInfo.isControlledPerson}
+                    onCheckedChange={(checked) => setBasicInfo(prev => ({ ...prev, isControlledPerson: checked as boolean }))}
+                  />
+                  <Label htmlFor="isControlledPerson">Is the new LP a controlled person?</Label>
+                </div>
+                <div>
+                  <Label htmlFor="authorizedSignatoryTitle">Title of Authorized Signatory</Label>
+                  <Input
+                    id="authorizedSignatoryTitle"
+                    name="authorizedSignatoryTitle"
+                    value={basicInfo.authorizedSignatoryTitle}
+                    onChange={handleBasicInfoChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="taxId">Taxpayer Identification Number</Label>
+                  <Input
+                    id="taxId"
+                    name="taxId"
+                    value={basicInfo.taxId}
+                    onChange={handleBasicInfoChange}
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
+              <Label htmlFor="address">
+                {entityType === 'individual' ? 'Current Residence Address' : 'Address of New LP'}
+              </Label>
+              <Input
+                id="address"
+                name="address"
+                value={basicInfo.address}
+                onChange={handleBasicInfoChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="phoneNumber">Telephone Number</Label>
+              <Input
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
+                value={basicInfo.phoneNumber}
+                onChange={handleBasicInfoChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={basicInfo.email}
+                onChange={handleBasicInfoChange}
+                required
+              />
+            </div>
+          </>
+        )}
+
+        <DialogFooter>
+          <Button type="submit" disabled={!entityType}>Next</Button>
+        </DialogFooter>
+      </form>
+    </ScrollArea>
+  )
+
   // =========================================
   // Main Render
   // =========================================
@@ -569,15 +730,16 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
       <DialogContent className="sm:max-w-[625px] bg-white">
         <DialogHeader>
           <DialogTitle>
-            {currentStep === 'consent' ? 'Consent and Authorized Signatories' : 
+            {currentStep === 'basicInfo' ? 'Basic Information' :
+             currentStep === 'consent' ? 'Consent and Authorized Signatories' : 
              currentStep === 'bank' ? 'Bank Account Information' : 
              currentStep === 'accredited' ? 'Accredited Investor Status' :
              currentStep === 'initials' ? 'Provide Your Initials' :
-             currentStep === 'qualifiedClient' ? 'Qualified Client Status' :
-             'Benefit Plan Investor Status'}
+             currentStep === 'qualifiedClient' ? 'Qualified Client Status' :             'Benefit Plan Investor Status'}
           </DialogTitle>
           <DialogDescription>
-            {currentStep === 'consent' ? 'Please provide your consent and list the authorized signatories for the fund.' : 
+            {currentStep === 'basicInfo' ? 'Please provide basic information about the new Limited Partner.' :
+             currentStep === 'consent' ? 'Please provide your consent and list the authorized signatories for the fund.' : 
              currentStep === 'bank' ? 'Please provide your bank account information.' :
              currentStep === 'accredited' ? 'Please indicate which of the following accredited investor criteria apply to you.' :
              currentStep === 'initials' ? 'Please provide your initials for document completion.' :
@@ -585,7 +747,9 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
              'Please indicate your Benefit Plan Investor status.'}
           </DialogDescription>
         </DialogHeader>
-        {currentStep === 'consent' ? renderConsentForm() : 
+        <Progress value={getProgressValue(currentStep)} className="mb-4" />
+        {currentStep === 'basicInfo' ? renderBasicInfoForm() :
+         currentStep === 'consent' ? renderConsentForm() : 
          currentStep === 'bank' ? renderBankForm() : 
          currentStep === 'accredited' ? renderAccreditedForm() :
          currentStep === 'initials' ? renderInitialsForm() :
@@ -599,4 +763,11 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
       </DialogContent>
     </Dialog>
   )
+}
+
+// Helper function to calculate progress value
+function getProgressValue(currentStep: string): number {
+  const steps = ['basicInfo', 'consent', 'bank', 'accredited', 'initials', 'qualifiedClient', 'benefitPlan']
+  const currentIndex = steps.indexOf(currentStep)
+  return ((currentIndex + 1) / steps.length) * 100
 }
