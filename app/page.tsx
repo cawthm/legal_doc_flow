@@ -20,7 +20,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center">
             <Image 
-              src="/logo.png" 
+              src="/elephant_logo.png" 
               alt="Capital Partners Logo" 
               width={40} 
               height={40} 
