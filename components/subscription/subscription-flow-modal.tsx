@@ -26,6 +26,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Kalam } from 'next/font/google'
 import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { cn } from "@/lib/utils"
+import { getSubscriptionData, saveSubscriptionData } from '@/utils/storage'
 
 const kalam = Kalam({ 
   weight: ['400', '700'],
@@ -89,6 +91,7 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
     authorizedSignatoryTitle: '',
     taxId: '',
   })
+  const [isCompleted, setIsCompleted] = useState(false)
 
   // =========================================
   // Effect Hooks
@@ -105,6 +108,36 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
       setHasStarted(true)
     }
   }, [consent, signatories, bankFormData])
+
+  // Improve completion check logic
+  const checkAllStepsComplete = (data: any) => {
+    return data?.benefitPlanStatus && 
+           data?.accreditedStatus && 
+           data?.qualifiedClientRepresentations && 
+           Object.values(data?.qualifiedClientRepresentations).every((rep: any) => rep.initialed);
+  }
+
+  // Load saved progress on mount
+  useEffect(() => {
+    const savedData = getSubscriptionData()
+    if (savedData) {
+      setHasStarted(Boolean(savedData.currentStep))
+      if (savedData.currentStep) {
+        setCurrentStep(savedData.currentStep)
+      }
+      setIsCompleted(checkAllStepsComplete(savedData))
+    }
+  }, [])
+
+  // Save progress when steps change
+  useEffect(() => {
+    if (hasStarted) {
+      saveSubscriptionData({
+        currentStep,
+        // ... other data
+      })
+    }
+  }, [currentStep, hasStarted])
 
   // =========================================
   // Event Handlers
@@ -720,12 +753,28 @@ export function SubscriptionFlowModal({ setAnswers }: { setAnswers: Dispatch<Set
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          onClick={() => setOpen(true)}
-          className={hasStarted ? "bg-green-500 hover:bg-green-600" : ""}
-        >
-          {hasStarted ? "Resume" : "Begin"}
-        </Button>
+        <div className="flex flex-col items-center">
+          <Button 
+            onClick={() => setHasStarted(true)}
+            className={cn(
+              "w-32", // Fixed width instead of w-full
+              isCompleted 
+                ? "bg-blue-500 hover:bg-blue-600" 
+                : "bg-green-500 hover:bg-green-600"
+            )}
+          >
+            {!hasStarted 
+              ? "Begin" 
+              : isCompleted 
+                ? "Complete" 
+                : "Resume"}
+          </Button>
+          {isCompleted && (
+            <span className="text-sm text-gray-500 mt-1">
+              Click to review/revise
+            </span>
+          )}
+        </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[625px] bg-white">
         <DialogHeader>
